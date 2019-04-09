@@ -127,6 +127,12 @@ function readInstalled (folder, opts, cb) {
   if (typeof opts.log !== 'function')
     opts.log = function () {}
 
+  if (typeof opts.depth !== 'undefined') {
+    opts.prod = true
+  }
+  else {
+    opts.prod = !!opts.prod
+  }
   opts.dev = !!opts.dev
   opts.realpathSeen = {}
   opts.findUnmetSeen = []
@@ -232,9 +238,13 @@ function readInstalled_ (folder, parent, name, reqver, depth, opts, cb) {
     obj.depth = depth
     //if (depth >= opts.depth) return cb(null, obj)
     asyncMap(installed, function (pkg, cb) {
-      var rv = obj.dependencies[pkg]
-      if (!rv && obj.devDependencies && opts.dev)
+      var rv;
+      if (opts.dev) {
+        rv = obj.dependencies[pkg]
+      }
+      if (!rv && obj.devDependencies && opts.dev) {
         rv = obj.devDependencies[pkg]
+      }
 
       if (depth > opts.depth) {
         obj.dependencies = {}
@@ -357,7 +367,10 @@ function unmarkExtraneous (obj, opts) {
 
   obj.extraneous = false
 
-  var deps = obj._dependencies || []
+  var deps = []
+  if (opts.prod) {
+    deps = obj._dependencies || []
+  }
   if (opts.dev && obj.devDependencies && (obj.root || obj.link)) {
     Object.keys(obj.devDependencies).forEach(function (k) {
       deps[k] = obj.devDependencies[k]
